@@ -17,44 +17,46 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import static dev.sunbirdrc.registry.Constants.Schema;
 import static dev.sunbirdrc.registry.middleware.util.Constants.ENTITY_TYPE;
 import static dev.sunbirdrc.registry.middleware.util.Constants.FILTERS;
 
+// SchemaLoader class is responsible for loading schemas from the database
 @Component
 public class SchemaLoader implements ApplicationListener<ContextRefreshedEvent> {
-	public static final Logger logger = LoggerFactory.getLogger(SchemaLoader.class);
+    public static final Logger logger = LoggerFactory.getLogger(SchemaLoader.class);
 
-	@Autowired
-	private SchemaService schemaService;
+    @Autowired
+    private SchemaService schemaService;
 
-	@Autowired
-	private ISearchService searchService;
+    @Autowired
+    private ISearchService searchService;
 
+    // This method is called when the application context is refreshed
+    @Override
+    public void onApplicationEvent(@NotNull ContextRefreshedEvent contextRefreshedEvent) {
+        loadSchemasFromDB();
+    }
 
-	@Override
-	public void onApplicationEvent(@NotNull ContextRefreshedEvent contextRefreshedEvent) {
-		loadSchemasFromDB();
-	}
+    // This method loads schemas from the database and adds them to the schema service
+    private void loadSchemasFromDB() {
+        ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
+        objectNode.set(ENTITY_TYPE, JsonNodeFactory.instance.arrayNode().add(Schema));
+        objectNode.set(FILTERS, JsonNodeFactory.instance.objectNode());
 
-	private void loadSchemasFromDB() {
-		ObjectNode objectNode = JsonNodeFactory.instance.objectNode();
-		objectNode.set(ENTITY_TYPE, JsonNodeFactory.instance.arrayNode().add(Schema));
-		objectNode.set(FILTERS, JsonNodeFactory.instance.objectNode());
-		try {
-			JsonNode searchResults = searchService.search(objectNode);
-			for (JsonNode schemaNode : searchResults.get(Schema)) {
-				try {
-					schemaService.addSchema(JsonNodeFactory.instance.objectNode().set(Schema, schemaNode));
-				} catch (Exception e) {
-					logger.error("Failed loading schema to definition manager:", e);
-				}
-			}
-			logger.info("Loaded {} schema from DB", searchResults.get(Schema).size());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+        try {
+            JsonNode searchResults = searchService.search(objectNode);
+            for (JsonNode schemaNode : searchResults.get(Schema)) {
+                try {
+                    schemaService.addSchema(JsonNodeFactory.instance.objectNode().set(Schema, schemaNode));
+                } catch (Exception e) {
+                    logger.error("Failed loading schema to definition manager:", e);
+                }
+            }
+            logger.info("Loaded {} schema from DB", searchResults.get(Schema).size());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

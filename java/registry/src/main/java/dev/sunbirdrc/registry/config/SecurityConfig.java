@@ -20,30 +20,35 @@ import org.springframework.security.web.authentication.session.RegisterSessionAu
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter;
 
+// Security configuration class for the application
 @Configuration
 @EnableWebSecurity
 @ComponentScan(basePackageClasses = KeycloakSecurityComponents.class)
-@ConditionalOnProperty(name = "authentication.enabled",havingValue = "true",matchIfMissing = false)
+@ConditionalOnProperty(name = "authentication.enabled", havingValue = "true", matchIfMissing = false)
 public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
 
-    @Value("${authentication.enabled:true}") boolean authenticationEnabled;
+    @Value("${authentication.enabled:true}")
+    boolean authenticationEnabled;
 
     @Autowired
     private SchemaFilter schemaFilter;
+
+    // Configure the global authentication manager with Keycloak authentication provider
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-
         KeycloakAuthenticationProvider keycloakAuthenticationProvider = keycloakAuthenticationProvider();
         keycloakAuthenticationProvider.setGrantedAuthoritiesMapper(
                 new SimpleAuthorityMapper());
         auth.authenticationProvider(keycloakAuthenticationProvider);
     }
 
+    // Configure Keycloak configuration resolver
     @Bean
     public KeycloakSpringBootConfigResolver KeycloakConfigResolver() {
         return new KeycloakSpringBootConfigResolver();
     }
 
+    // Configure session authentication strategy
     @Bean
     @Override
     protected SessionAuthenticationStrategy sessionAuthenticationStrategy() {
@@ -51,18 +56,19 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 new SessionRegistryImpl());
     }
 
-    //TODO: verify all paths
+    // Configure HTTP security settings
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         super.configure(http);
-
         HttpSecurity httpConfig = http.csrf().disable();
+
+        // If authentication is enabled, configure the allowed paths and require authentication for other paths
         if (authenticationEnabled) {
             httpConfig.authorizeRequests()
                     .antMatchers("/**/invite", "/health", "/error",
                             "/_schemas/**", "/**/templates/**", "/**/*.json", "/**/verify",
                             "/swagger-ui", "/**/search", "/**/attestation/**",
-                            "/api/docs/swagger.json","/api/docs/*.json", "/plugin/**", "/swagger-ui.html")
+                            "/api/docs/swagger.json", "/api/docs/*.json", "/plugin/**", "/swagger-ui.html")
                     .permitAll()
                     .and()
                     .addFilterBefore(schemaFilter, WebAsyncManagerIntegrationFilter.class)
@@ -70,6 +76,7 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                     .anyRequest()
                     .authenticated();
         } else {
+            // If authentication is disabled, allow all requests
             httpConfig.authorizeRequests()
                     .anyRequest()
                     .permitAll();

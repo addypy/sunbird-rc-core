@@ -18,29 +18,31 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-
 import java.time.Duration;
 
+// Main class for the Sunbird RC application
 @SpringBootApplication(exclude={SecurityAutoConfiguration.class})
 @ComponentScan(basePackages = {"dev.sunbirdrc.registry", "dev.sunbirdrc.pojos", "dev.sunbirdrc.keycloak", "dev.sunbirdrc.workflow", "dev.sunbirdrc.plugin"})
 public class SunbirdRCApplication {
     private static ApplicationContext context;
     private static SpringApplication application = new SpringApplication(SunbirdRCApplication.class);
+
     @Value("${registry.manager.type}")
     private String definitionManagerType;
 
     @Value("${registry.redis.host:localhost}")
     private String redisHost;
+
     @Value("${registry.redis.port:6379}")
     private String redisPort;
 
-
+    // Main method to run the application
     public static void main(String[] args) {
         context = application.run(args);
     }
 
     /**
-     * This method return non-web application context
+     * This method returns a non-web application context
      *
      * @return context
      */
@@ -53,6 +55,7 @@ public class SunbirdRCApplication {
     @Value("${cors.allowedOrigin}")
     public String corsAllowedOrigin;
 
+    // Bean for configuring CORS filter
     @Bean
     public FilterRegistrationBean corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -71,6 +74,7 @@ public class SunbirdRCApplication {
         return bean;
     }
 
+    // Bean for configuring JedisPool for Redis
     @Bean
     @ConditionalOnProperty(value = "registry.manager.type", havingValue = "DistributedDefinitionsManager")
     public JedisPool jedisPool() {
@@ -89,6 +93,7 @@ public class SunbirdRCApplication {
         return jedisPool;
     }
 
+    // Bean for configuring the definitions manager
     @Bean
     public IDefinitionsManager definitionsManager() {
         if(definitionManagerType.equals("DefinitionsManager")) {

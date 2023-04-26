@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+// Ignore unknown properties during JSON deserialization
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Builder
 @Data
@@ -23,102 +24,91 @@ import java.util.Map;
 @AllArgsConstructor
 public class AttestationPolicy {
     private static final Logger logger = LoggerFactory.getLogger(AttestationPolicy.class);
-
     private String osid;
+    private final static String PLUGIN_SPLITTER = ":";
+    
+    // Name property will be used to pick the specific attestation policy
+    private String name;
+    
+    // Holds the name of the attestation property. eg. education, certificate, course
+    private Object attestationProperties;
+    
+    // Holds the info of manual or automated attestation
+    private AttestationType type;
+    
+    // Holds the expression to identify the attestor
+    private String conditions;
+    
+    // It will be used to define the actor name
+    private String attestorPlugin;
+    
+    // It will be used for signin redirection eg. consent based screens
+    private String attestorSignin;
+    
+    // Credential template for an attestation
+    private Object credentialTemplate;
+    private String entity;
+    private Date updatedAt;
+    private String createdBy;
+    private AttestationStatus status;
+    private Map<String, Object> additionalInput;
+    private List<AttestationStep> attestationSteps;
+    private String onComplete;
 
-	private final static String PLUGIN_SPLITTER = ":";
+    // Get attestor entity from attestorPlugin
+    public String getAttestorEntity() {
+        String[] split = this.attestorPlugin.split("entity=");
+        return split.length == 2 ? split[1] : "";
+    }
 
-	/**
-	 * name property will be used to pick the specific attestation policy
-	 */
-	private String name;
-	/*
-	 * Holds the name of the attestation property. eg. education, certificate, course
-	 *
-	 * */
-	private Object attestationProperties;
-	/**
-	 * Holds the info of manual or automated attestation
-	 */
-	private AttestationType type;
-	/*
-	 * Holds the expression to identify the attestor
-	 * */
-	private String conditions;
-	/*
-	 * It will be used to define the actor name
-	 * */
-	private String attestorPlugin;
-	/*
-	 * It will be used for signin redirection eg. consent based screens
-	 * */
-	private String attestorSignin;
-	/*
-	 * Credential template for an attestation
-	 * */
-	private Object credentialTemplate;
+    // Get node path for the attestation policy
+    public String getNodePath() {
+        return name + "/[]";
+    }
 
-	private String entity;
+    // Check if the attestor plugin is internal
+    public boolean isInternal() {
+        return this.attestorPlugin.split(PLUGIN_SPLITTER)[1].equals(AttestorPluginType.internal.name());
+    }
 
-	private Date updatedAt;
+    // Get attestation properties as a map
+    public Map<String, String> getAttestationProperties() {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            TypeReference<Map<String, String>> typeRef
+                    = new TypeReference<Map<String, String>>() {
+            };
+            return objectMapper.readValue(objectMapper.writeValueAsString(this.attestationProperties), typeRef);
+        } catch (Exception e) {
+            return Collections.emptyMap();
+        }
+    }
 
-	private String createdBy;
-
-	private AttestationStatus status;
-
-	private Map<String, Object> additionalInput;
-
-	private List<AttestationStep> attestationSteps;
-
-	private String onComplete;
-
-	public String getAttestorEntity() {
-		String[] split = this.attestorPlugin.split("entity=");
-		return split.length == 2 ? split[1] : "";
-	}
-
-	public String getNodePath() {
-		return name + "/[]";
-	}
-
-	public boolean isInternal() {
-		return this.attestorPlugin.split(PLUGIN_SPLITTER)[1].equals(AttestorPluginType.internal.name());
-	}
-
-	public Map<String, String> getAttestationProperties() {
-		try {
-			ObjectMapper objectMapper = new ObjectMapper();
-			TypeReference<Map<String, String>> typeRef
-					= new TypeReference<Map<String, String>>() {
-			};
-			return objectMapper.readValue(objectMapper.writeValueAsString(this.attestationProperties), typeRef);
-		} catch (Exception e) {
-			return Collections.emptyMap();
-		}
-	}
-
-	public FlowType getCompletionType() {
-		if (!StringUtils.isEmpty(this.onComplete)) {
+    // Get completion type from onComplete field
+    public FlowType getCompletionType() {
+        if (!StringUtils.isEmpty(this.onComplete)) {
             try {
                 return FlowType.valueOf(this.onComplete.split(":")[0].toUpperCase());
             } catch (Exception e) {
                 logger.error("Invalid value for onComplete field: {}", this.onComplete, e);
             }
-		}
-		return FlowType.NONE;
-	}
+        }
+        return FlowType.NONE;
+    }
 
-	public String getCompletionValue() {
-		if (!StringUtils.isEmpty(this.onComplete)) {
-			return this.onComplete.split(":")[1];
-		}
-		return "";
-	}
+    // Get completion value from onComplete field
+    public String getCompletionValue() {
+        if (!StringUtils.isEmpty(this.onComplete)) {
+            return this.onComplete.split(":")[1];
+        }
+        return "";
+    }
 
-	public String getCompletionFunctionName() {
-		String completionValue = this.getCompletionValue();
-		return StringUtils.substring(completionValue,
-				completionValue.lastIndexOf("/") + 1,
+    // Get completion function name from completion value
+    public String getCompletionFunctionName() {
+        String completionValue = this.getCompletionValue();
+        return StringUtils.substring(completionValue,
+                completionValue.lastIndexOf("/") + 1,
                 completionValue.contains("(") ? completionValue.indexOf("(") : completionValue.length());
-	}
+    }
 }

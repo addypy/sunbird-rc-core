@@ -19,26 +19,29 @@ import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.MessageListenerContainer;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
 import static dev.sunbirdrc.registry.Constants.createEntityGroupId;
 import static dev.sunbirdrc.registry.middleware.util.Constants.SUNBIRD_KAFKA_SERVICE_NAME;
 
+// Kafka configuration class
 @Configuration
 @ConditionalOnProperty("async.enabled")
 @EnableKafka
 public class KafkaConfiguration {
+
 	@Value("${kafka.createEntityTopic:create_entity}")
 	String createEntityTopic;
+
 	@Value("${kafka.postCreateEntityTopic:post_create_entity}")
 	String postCreateEntityTopic;
+
 	@Value(value = "${kafka.bootstrapAddress}")
 	private String bootstrapAddress;
 
+	// Kafka admin bean configuration
 	@Bean
 	public KafkaAdmin kafkaAdmin() {
 		Map<String, Object> configs = new HashMap<>();
@@ -46,6 +49,7 @@ public class KafkaConfiguration {
 		return new KafkaAdmin(configs);
 	}
 
+	// Kafka admin client bean configuration
 	@Bean
 	public AdminClient kafkaAdminClient() {
 		Map<String, Object> configs = new HashMap<>();
@@ -53,17 +57,19 @@ public class KafkaConfiguration {
 		return KafkaAdminClient.create(configs);
 	}
 
-
+	// Create entity topic bean configuration
 	@Bean
 	public NewTopic createEntityTopic() {
 		return new NewTopic(createEntityTopic, 1, (short) 1);
 	}
 
+	// Post create entity topic bean configuration
 	@Bean
 	public NewTopic postCreateEntityTopic() {
 		return new NewTopic(postCreateEntityTopic, 1, (short) 1);
 	}
 
+	// Producer factory bean configuration
 	@Bean
 	public ProducerFactory<String, String> producerFactory() {
 		Map<String, Object> configProps = new HashMap<>();
@@ -73,11 +79,13 @@ public class KafkaConfiguration {
 		return new DefaultKafkaProducerFactory<>(configProps);
 	}
 
+	// Kafka template bean configuration
 	@Bean
 	public KafkaTemplate<String, String> kafkaTemplate() {
 		return new KafkaTemplate<>(producerFactory());
 	}
 
+	// Consumer factory bean configuration
 	@Bean
 	public ConsumerFactory<String, String> consumerFactory() {
 		Map<String, Object> props = new HashMap<>();
@@ -89,13 +97,12 @@ public class KafkaConfiguration {
 		return new DefaultKafkaConsumerFactory<>(props);
 	}
 
+	// Kafka listener container factory bean configuration
 	@Bean
 	public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory() {
-
 		ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
 		factory.setConsumerFactory(consumerFactory());
 		factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
 		return factory;
 	}
-
 }

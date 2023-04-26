@@ -13,16 +13,19 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.ElementType.TYPE_USE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+// This annotation is used to validate database configuration properties
 @Documented
+// Specifies the types of elements to which this annotation can be applied
 @Target({ METHOD, FIELD, CONSTRUCTOR, PARAMETER, TYPE_USE })
+// Specifies how long the annotation should be retained
 @Retention(RUNTIME)
+// Specifies the validator class that will be used to validate the annotated elements
 @Constraint(validatedBy = { DatabaseConfigValidator.class })
 public @interface ValidDatabaseConfig {
-
+    // Default error message to be displayed if the validation fails
 	String message() default "{Invalid database properties}";
-
+	// Default validation group
 	Class<?>[] groups() default {};
-
+	// Default payload for the constraint
 	Class<? extends Payload>[] payload() default {};
-
 }

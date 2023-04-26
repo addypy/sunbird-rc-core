@@ -13,17 +13,19 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-// TODO: Get should be viewed by both attestor and reviewer
+// FileStorageController handles file storage related operations such as saving, deleting, and fetching files.
 @Controller
 public class FileStorageController {
     private final FileStorageService fileStorageService;
     private final RegistryHelper registryHelper;
 
+    // Constructor for FileStorageController
     FileStorageController(FileStorageService fileStorageService, RegistryHelper registryHelper) {
         this.fileStorageService = fileStorageService;
         this.registryHelper = registryHelper;
     }
 
+    // Save files to the storage and return the file names
     @PostMapping("/api/v1/{entity}/{entityId}/{property}/documents")
     public ResponseEntity<DocumentsResponse> save(@RequestParam MultipartFile[] files,
                                                   @PathVariable String entity,
@@ -40,6 +42,7 @@ public class FileStorageController {
         return new ResponseEntity<>(documentsResponse, HttpStatus.OK);
     }
 
+    // Delete multiple files from the storage
     @DeleteMapping("/api/v1/{entity}/{entityId}/{property}/documents")
     public ResponseEntity<DocumentsResponse> deleteMultipleFiles(@PathVariable String entity,
                                                     @PathVariable String entityId,
@@ -56,6 +59,7 @@ public class FileStorageController {
         return new ResponseEntity<>(documentsResponse, HttpStatus.OK);
     }
 
+    // Delete a single file from the storage
     @DeleteMapping(value = "/api/v1/{entity}/{entityId}/{property}/documents/{documentId}")
     public ResponseEntity deleteAFile(@PathVariable String entity,
                               @PathVariable String entityId,
@@ -71,6 +75,7 @@ public class FileStorageController {
         return fileStorageService.deleteDocument(httpServletRequest.getRequestURI());
     }
 
+    // Get a file from the storage
     @GetMapping(value = "/api/v1/{entity}/{entityId}/{property}/documents/{documentId}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> get(@PathVariable String entity,
                                       @PathVariable String entityId,

@@ -1,5 +1,4 @@
 package dev.sunbirdrc.registry.dao;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -11,8 +10,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class ValueType {
     /**
      * Writes into the database in the original value type that was passed
-     * @param entryVal
-     * @return
+     * @param entryVal JsonNode containing the value to be written
+     * @return Object containing the value in its original type
      */
     public static Object getValue(JsonNode entryVal) {
         Object result = null;
@@ -21,7 +20,6 @@ public class ValueType {
             result = entryVal;
             return result;
         }
-
         if (entryVal.isBoolean()) {
             result = entryVal.asBoolean();
         } else if (entryVal.isTextual()) {
@@ -39,7 +37,6 @@ public class ValueType {
         }
         return result;
     }
-
 
     /**
      * Sets the contentNode to the corresponding value.
